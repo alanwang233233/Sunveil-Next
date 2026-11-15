@@ -1,4 +1,4 @@
-# 🌒 Sunveil
+# 🌒 Sunveil Next
 
 **On-demand headless virtual display for [Sunshine](https://github.com/LizardByte/Sunshine) on CachyOS / Arch and Debian (KDE Plasma 6 / Wayland / NVIDIA).**
 
