@@ -1,14 +1,15 @@
 # Contributing to Sunveil
 
 Thanks for helping! This project is small and focused: making Sunshine run a
-dynamic headless virtual display on CachyOS / Arch + KDE Plasma 6 Wayland.
+dynamic headless virtual display on CachyOS / Arch / Debian + KDE Plasma 6
+Wayland.
 
 ## Most valuable contribution: test reports
 
 Sunveil is validated on a specific stack (Plasma 6.7, NVIDIA, CachyOS). If you
 run something different, a quick report helps a lot. Please open an issue with:
 
-- CachyOS / Arch, and `plasmashell --version`
+- Distro & version (CachyOS / Arch / Debian), and `plasmashell --version`
 - `echo $XDG_SESSION_TYPE` (must be `wayland`)
 - GPU + driver (`nvidia-smi` or `lspci -k | grep -A2 VGA`)
 - Sunshine version (`sunshine --version` or the package)
@@ -33,5 +34,5 @@ In scope: reliability on the target stack, more Plasma/GPU coverage, better
 diagnostics, quality-of-life install options.
 
 Probably out of scope: non-KDE compositors (GNOME/wlroots use different virtual
-display mechanisms), non-Arch distros (different package managers). Forks
-welcome for those.
+display mechanisms), distros outside the Arch/Debian families (other package
+managers). Forks welcome for those.

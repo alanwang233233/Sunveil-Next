@@ -1,6 +1,6 @@
 # 🌒 Sunveil
 
-**On-demand headless virtual display for [Sunshine](https://github.com/LizardByte/Sunshine) on CachyOS (KDE Plasma 6 / Wayland / NVIDIA).**
+**On-demand headless virtual display for [Sunshine](https://github.com/LizardByte/Sunshine) on CachyOS / Arch and Debian (KDE Plasma 6 / Wayland / NVIDIA).**
 
 Stream your PC with [Moonlight](https://moonlight-stream.org/) / Artemis at your
 **client's native resolution** — phone, tablet, laptop, TV — with the host's
@@ -8,7 +8,8 @@ physical monitors **turned off** for the duration of the stream, then restored
 automatically when you disconnect.
 
 No dummy HDMI plug. No always-on fake display. No Windows. Pure software, built
-for and tested on CachyOS + Plasma 6 Wayland + NVIDIA proprietary drivers.
+for and tested on CachyOS and Debian 13 + Plasma 6 Wayland + NVIDIA proprietary
+drivers.
 
 ![Sunveil demo — a phone connects, a virtual display is created at its native resolution, the physical monitors turn off, and everything is restored on disconnect](docs/demo.gif)
 
@@ -39,7 +40,7 @@ running when you're not streaming.
   money/ports. Sunveil is dynamic and leaves no trace when idle.
 - **[Apollo](https://github.com/ClassicOldSong/Apollo)'s** virtual display is
   **Windows-only** (it relies on SudoVDA). On Linux it can't create a virtual
-  display. Sunveil fills that gap for CachyOS.
+  display. Sunveil fills that gap on CachyOS/Arch and Debian.
 - **[Hermes](https://github.com/MrOz59/Hermes)** (an Apollo-for-Linux fork) is a
   great heavier alternative if you want a purpose-built host; Sunveil instead
   enhances the Sunshine you already run, in ~15 minutes, with stock packages.
@@ -50,7 +51,7 @@ running when you're not streaming.
 
 | | |
 |---|---|
-| **OS** | CachyOS / Arch (uses `pacman`) |
+| **OS** | CachyOS / Arch (`pacman`) or Debian 13+ (`apt`) |
 | **Desktop** | KDE Plasma 6 on **Wayland** |
 | **GPU** | Any Sunshine-supported GPU. Developed on NVIDIA (proprietary/open). |
 | **Sunshine** | Already installed and working (`systemctl --user status app-dev.lizardbyte.app.Sunshine.service`) |
@@ -76,6 +77,21 @@ setup** — it backs up your `sunshine.conf`, merges only the keys it needs
 systemd fix for the boot-time click bug (see *Troubleshooting*).
 
 Then just **connect from Moonlight** and start streaming.
+
+### Debian notes
+
+Sunshine is **not in Debian's official repositories** — install LizardByte's
+`.deb` first (download it from their
+[releases page](https://github.com/LizardByte/Sunshine/releases)):
+
+```bash
+sudo apt install ./sunshine_*_amd64.deb
+systemctl --user enable --now app-dev.lizardbyte.app.Sunshine.service
+```
+
+Then run `./install.sh` exactly as above — it auto-detects `apt` and installs
+`krfb` / `kscreen` for you. The Debian `.deb` ships the same user service as
+the Arch package (`app-dev.lizardbyte.app.Sunshine.service`).
 
 ### Options
 
@@ -117,7 +133,8 @@ Plasma session. To stream a freshly-booted machine (e.g. a headless box in a
 closet), enable **autologin** so Plasma comes up on boot:
 
 ```bash
-# Plasma 6 uses SDDM ("plasmalogin"). Create an autologin drop-in:
+# Debian ships SDDM; CachyOS ships the SDDM-compatible "plasmalogin".
+# Both read /etc/sddm.conf.d/ drop-ins. Create one:
 printf '[Autologin]\nUser=%s\nSession=plasma.desktop\nRelogin=false\n' "$USER" \
   | sudo tee /etc/sddm.conf.d/autologin.conf
 ```
@@ -248,5 +265,5 @@ feature on Windows.
 
 MIT — see [LICENSE](LICENSE).
 
-Contributions welcome, especially test reports from other CachyOS/Arch + Plasma
-6 configurations. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions welcome, especially test reports from other CachyOS/Arch/Debian +
+Plasma 6 configurations. See [CONTRIBUTING.md](CONTRIBUTING.md).

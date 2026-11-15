@@ -51,12 +51,21 @@ if systemctl --user is-enabled "$SERVICE" >/dev/null 2>&1; then
   say "Restarted Sunshine."
 fi
 
+# leftover-package hint, per distro
+if command -v pacman >/dev/null 2>&1; then
+  KRFB_RM="sudo pacman -Rns krfb"
+elif command -v apt-get >/dev/null 2>&1; then
+  KRFB_RM="sudo apt remove krfb"
+else
+  KRFB_RM="remove the krfb package with your package manager"
+fi
+
 cat <<EOF
 
 Sunveil removed.
 
 Left in place (remove manually if you want):
-  * krfb package         ->  sudo pacman -Rns krfb
+  * krfb package         ->  $KRFB_RM
   * hook.log             ->  $HOOKDIR/hook.log
   * autologin (if you added it) -> /etc/sddm.conf.d/autologin.conf
 

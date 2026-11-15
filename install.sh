@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Sunveil installer — on-demand headless virtual display for Sunshine on CachyOS
-# (KDE Plasma 6 Wayland). Safe to run on an existing Sunshine install and safe to
-# re-run (idempotent). It never overwrites your Sunshine config blindly: it backs
-# it up and merges only the keys it needs.
+# Sunveil installer — on-demand headless virtual display for Sunshine on
+# CachyOS/Arch and Debian (KDE Plasma 6 Wayland). Safe to run on an existing
+# Sunshine install and safe to re-run (idempotent). It never overwrites your
+# Sunshine config blindly: it backs it up and merges only the keys it needs.
 #
 #   Usage:  ./install.sh [--coexist] [--no-restart] [--yes]
 #
@@ -45,7 +45,29 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SUNSHINE_DIR="$HOME/.config/sunshine"
 CONF="$SUNSHINE_DIR/sunshine.conf"
 HOOKDIR="$SUNSHINE_DIR/hooks"
-SERVICE="app-dev.lizardbyte.app.Sunshine.service"
+# Sunshine's user unit name differs slightly across packaging: both the Arch
+# package and the Debian .deb ship the canonical app-dev name with an alias
+# sunshine.service. Prefer canonical, then alias, else fall back to canonical
+# (e.g. systemd not reachable yet / Sunshine not installed).
+SERVICE=""
+for u in app-dev.lizardbyte.app.Sunshine.service sunshine.service; do
+  if systemctl --user list-unit-files --no-legend 2>/dev/null | awk '{print $1}' | grep -qx "$u"; then
+    SERVICE="$u"; break
+  fi
+done
+SERVICE="${SERVICE:-app-dev.lizardbyte.app.Sunshine.service}"
+
+# ------------------------------------------------------------------ distro detection
+# CachyOS/Arch use pacman; Debian (and derivatives) use apt. The needed package
+# names are identical on both: krfb ships krfb-virtualmonitor, kscreen ships
+# kscreen-doctor.
+if command -v pacman >/dev/null 2>&1; then
+  PKG="arch"
+elif command -v apt-get >/dev/null 2>&1; then
+  PKG="debian"
+else
+  PKG="unknown"
+fi
 
 say "Sunveil installer"
 echo
@@ -53,7 +75,16 @@ echo
 # ------------------------------------------------------------------ 1. sanity checks
 [ "$(id -u)" -ne 0 ] || die "Run as your normal user, NOT root/sudo. (It edits your ~/.config and user service.)"
 
-command -v sunshine >/dev/null 2>&1 || die "Sunshine not found. Install it first (e.g. 'sudo pacman -S sunshine')."
+command -v sudo >/dev/null 2>&1 || die "sudo not found. Install it first (Debian: 'su -c \"apt install sudo\"'; Arch: 'pacman -S sudo' as root)."
+
+case "$PKG" in
+  arch)   sunshine_hint="Install it first (e.g. 'sudo pacman -S sunshine')." ;;
+  debian) sunshine_hint="Not in Debian's repos — get the .deb from https://github.com/LizardByte/Sunshine/releases then: sudo apt install ./sunshine_*_amd64.deb" ;;
+  *)      sunshine_hint="Install it first." ;;
+esac
+command -v sunshine >/dev/null 2>&1 || die "Sunshine not found. $sunshine_hint"
+
+command -v python3 >/dev/null 2>&1 || die "python3 not found — needed to merge sunshine.conf. Install it with your package manager."
 
 # Wayland + KDE check (warn, don't hard-fail — advanced users may know better)
 if [ "${XDG_SESSION_TYPE:-}" != "wayland" ]; then
@@ -71,15 +102,20 @@ command -v kscreen-doctor       >/dev/null 2>&1 || need_pkgs+=(kscreen)
 
 if [ "${#need_pkgs[@]}" -gt 0 ]; then
   say "Need to install: ${need_pkgs[*]}"
-  if command -v pacman >/dev/null 2>&1; then
-    if ask "Install with pacman now? (needs sudo)"; then
+  case "$PKG" in
+    arch)
+      ask "Install with pacman now? (needs sudo)" || die "Cannot continue without: ${need_pkgs[*]}"
       sudo pacman -S --needed "${need_pkgs[@]}" || die "Package install failed."
-    else
-      die "Cannot continue without: ${need_pkgs[*]}"
-    fi
-  else
-    die "pacman not found. This installer targets CachyOS/Arch. Install manually: ${need_pkgs[*]}"
-  fi
+      ;;
+    debian)
+      ask "Install with apt now? (needs sudo)" || die "Cannot continue without: ${need_pkgs[*]}"
+      sudo apt-get update || warn "apt-get update failed; attempting install anyway."
+      sudo apt-get install -y "${need_pkgs[@]}" || die "Package install failed."
+      ;;
+    *)
+      die "No pacman or apt found. This installer targets CachyOS/Arch and Debian. Install manually: ${need_pkgs[*]}"
+      ;;
+  esac
 else
   ok "Dependencies present (krfb, kscreen)."
 fi

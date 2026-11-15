@@ -2,7 +2,8 @@
 
 Sunshine runs as a **user** systemd service. It can only capture a desktop that
 exists, and a Plasma Wayland session only exists **after login**. So on a fresh
-boot sitting at the SDDM ("plasmalogin") login screen, Sunshine either isn't
+boot sitting at the login-manager screen (SDDM on Debian; CachyOS ships the
+SDDM-compatible "plasmalogin"), Sunshine either isn't
 running or has nothing to capture, and Moonlight won't see the host.
 
 To stream a machine nobody is physically logging into, make Plasma start on
@@ -22,10 +23,10 @@ printf '[Autologin]\nUser=%s\nSession=plasma.desktop\nRelogin=false\n' "$USER" \
   | sudo tee /etc/sddm.conf.d/autologin.conf
 ```
 
-`plasmalogin` reads `/etc/sddm.conf.d/` at higher priority than its defaults, so
-this drop-in wins. Reboot and the box comes up already in your Plasma Wayland
-session, KWin starts, the Sunshine user service starts, and Moonlight can reach
-it.
+Both SDDM and `plasmalogin` read `/etc/sddm.conf.d/` drop-ins on top of their
+defaults, so this file wins. Reboot and the box comes up already in your Plasma
+Wayland session, KWin starts, the Sunshine user service starts, and Moonlight
+can reach it.
 
 ### `Relogin` — pick per use case
 - `Relogin=false` — autologin **only at boot**. You can still log out to the
